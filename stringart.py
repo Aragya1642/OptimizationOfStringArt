@@ -15,8 +15,8 @@ from PIL import Image, ImageOps, ImageFilter, ImageEnhance
 
 class StringArtGenerator:
     def __init__(self):
-        self.iterations = 1000
-        self.shape = 'circle'
+        self.iterations = 1000           # So is everything in this class and basically just a set up for the GUI which actually creates the image?
+        self.shape = 'circle'            # Why are these values hard-coded?
         self.image = None
         self.data = None
         self.residual = None
