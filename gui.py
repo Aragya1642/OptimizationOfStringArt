@@ -167,7 +167,7 @@ def Generate():
     result_imageLabel.configure(image = image_list.get('result_img'))
     imageLabel.image = image_list.get('result_img')
 
-
+#####################################################################################################
 
 
 window = tk.Tk()
