@@ -1,3 +1,7 @@
+
+# Using youtube video: https://www.youtube.com/watch?v=ibf5cx221hk
+# Left the video at 7:37
+
 import tkinter as tk
 
 root  = tk.Tk() # This creates my initial window
