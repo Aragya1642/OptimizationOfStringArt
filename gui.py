@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from tkinter import messagebox
 
 from stringart import StringArtGenerator
-
+# guisdui
 
 import csv
 import matplotlib.pyplot as plt
