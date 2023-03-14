@@ -39,8 +39,8 @@ btn6.grid(row=1, column=2, sticky = tk.W+tk.E)
 
 buttonframe.pack(fill = 'x')
 
-anotherbtn = tk.Button(root, text = "TEST")
-anotherbtn.place(x=200, y=200, height=100, width=100) # This is kinda shitty so...
+# anotherbtn = tk.Button(root, text = "TEST")
+# anotherbtn.place(x=200, y=200, height=100, width=100) # This is kinda shitty so...
 
 # button = tk.Button(root, text = "Click Me!", font = ('Arial', 18))
 # button.pack(padx = 10, pady = 10)
