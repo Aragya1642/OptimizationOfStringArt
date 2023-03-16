@@ -5,6 +5,7 @@ from stringart import StringArtGenerator  # This is the string art generator fro
 import os # Allows for the interaction with the computer os (I think)
 from tkinter import filedialog # For Upload function
 from PIL import ImageTk, Image # For Upload function
+from tkinter import messagebox
 
 
 image_list = {}
@@ -87,7 +88,7 @@ class OptimizationGUI:
         self.imageLabel = tk.Label(self.root)
         self.imageLabel.pack(padx=10,pady=10)
         ########################################## - Start generating the stringart
-        self.generate_btn = Button(self.root, text = "Optimize my Picture", font= ('Arial', 30))
+        self.generate_btn = Button(self.root, text = "Optimize my Picture", font= ('Arial', 30), command=self.Generate)
         self.generate_btn.pack(side=tk.TOP)
         # Make sure to add a command to the optimize button
         ##########################################
@@ -130,5 +131,119 @@ class OptimizationGUI:
         self.imageLabel.image = image_list.get('upload_img')
         return filepath
     
+    def Generate(self):
+
+        if self.entry1.get() == '' or self.entry2.get() == '' or self.entry3.get() == '' or self.entry4.get() == '' or self.entry5.get() == '' or self.path_label.cget("text") == '':
+            messagebox.showwarning("Warning","Please fill all the blanks above")
+            return None
+
+        # generator = StringArtGenerator()  
+        # generator.load_image(path_label.cget("text"))
+        # generator.preprocess()
+        # generator.set_nails(int(nails_entry.get())) 
+        # generator.set_seed(42)
+        # generator.set_iterations(int(iteration_entry.get()))
+        # generator.set_shape(combobox_shpae.get())
+        # generator.set_weight(int(weight_entry.get()))
+        # pattern = generator.generate()
+
+        # # print(img_path_value)
+        # # print(nails_value)
+        # # print(iteration_value)
+        # # print(shape_value)
+        # # print(weight_value)
+
+        # lines_x = []
+        # lines_y = [] 
+        # axis_list = []
+        # for i, j in zip(pattern, pattern[1:]): 
+        #     lines_x.append((i[0], j[0]))
+        #     lines_y.append((i[1], j[1]))
+        #     axis_list.append((i[0], i[1])) 
+
+        # axis_w_index = []
+        # res = []
+        # point_ref = []
+        # [res.append(x) for x in axis_list if x not in res]
+        # axis_w_index.append((0,0.000,0.000,0.000))
+        # for i in axis_list:
+        #     axis_w_index.append((res.index(i)+1,i[0],i[1],0.000))
+        # point_ref.append((0,0.000,0.000,0.000))
+        # for i in res:
+        #     point_ref.append((res.index(i)+1,i[0],i[1],0.000))
+
+        # order = []
+        # for i in axis_w_index:
+        #     order.append((i[0],0.000))
+
+        # print(order[0:10])
+        # print(axis_w_index[0:10])
+        
+        
+        # current_dateTime = datetime.now()
+        # d1 = current_dateTime.strftime("%Y%m%d%H%M%S")
+
+
+        # axis_index_name = os.path.join(os.getcwd(),'StringArt_doc', "axis_w_index_" + d1 + ".txt")
+        # print(axis_index_name)
+        # os.makedirs(os.path.dirname(axis_index_name), exist_ok=True)
+        # f4 = open(axis_index_name, "w+")
+        # with f4:   
+        #     write = csv.writer(f4)
+        #     write.writerows(axis_w_index)
+        # f4.close()
+
+
+        # point_ref_name = os.path.join(os.getcwd(), 'StringArt_doc', "point_reference_" + d1 + ".txt")
+        # os.makedirs(os.path.dirname(point_ref_name), exist_ok=True)
+        # f = open(point_ref_name, 'w+')
+        # for t in point_ref:
+        #     line = ' '.join(str(x).strip('(').strip(',').strip(')') for x in t)
+        #     f.write(line + '\n')
+        # f.close()
+
+        # order_name = os.path.join(os.getcwd(), 'StringArt_doc', "order_" + d1 + ".txt")
+        # os.makedirs(os.path.dirname(order_name), exist_ok=True)
+        # f5 = open(order_name, 'w+')
+        # for t in order[1:]:
+        #     line = ' '.join(str(order).strip('(').strip(')') for order in t)
+        #     f5.write(line+'\n')
+        # f5.close()
+
+
+        # xmin = 0.
+        # ymin = 0.
+        # xmax = generator.data.shape[0]
+        # ymax = generator.data.shape[1]
+
+        # plt.ion()
+        # plt.figure(figsize=(8, 8))
+        # plt.axis('off')
+        # axes = plt.gca()
+        # axes.set_xlim([xmin, xmax])
+        # axes.set_ylim([ymin, ymax])
+        # axes.get_xaxis().set_visible(False)
+        # axes.get_yaxis().set_visible(False)
+        # axes.set_aspect('equal')
+        # plt.draw()
+
+        # batchsize = 10
+        # for i in range(0, len(lines_x), batchsize):
+        #     plt.plot(lines_x[i:i+batchsize], lines_y[i:i+batchsize],
+        #             linewidth=0.1, color='k')
+        #     plt.draw()
+        #     plt.pause(0.000001)
+
+        # save_fig_path = os.path.join(os.getcwd(), 'StringArt_doc', "result_" + d1 + ".png")
+        # os.makedirs(os.path.dirname(save_fig_path), exist_ok=True)
+        # plt.savefig(save_fig_path, bbox_inches='tight', pad_inches=0)
+        
+        # result_img = Image.open(save_fig_path)
+        # resize_result_image = result_img.resize((200, 200))
+        # result_img_tk = ImageTk.PhotoImage(resize_result_image)
+        # image_list['result_img'] = result_img_tk
+
+        # result_imageLabel.configure(image = image_list.get('result_img'))
+        # imageLabel.image = image_list.get('result_img')
 # This is where code starts and refrences back to my class
 OptimizationGUI()
