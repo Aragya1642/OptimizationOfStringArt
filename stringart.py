@@ -141,7 +141,8 @@ class StringArtGenerator:
 
     def choose_darkest_path(self, nail):
         max_darkness = -1.0
-        for index, rowcol in enumerate(self.paths[nail]):
+        for count, rowcol in enumerate(self.paths[nail]):
+            print(count)
             rows = [i[0] for i in rowcol]
             cols = [i[1] for i in rowcol]
             darkness = float(np.sum(self.data[rows, cols]))
@@ -149,7 +150,7 @@ class StringArtGenerator:
             if darkness > max_darkness:
                 darkest_path = np.zeros(np.shape(self.data))
                 darkest_path[rows,cols] = 1.0
-                darkest_nail = index
+                darkest_nail = count
                 max_darkness = darkness
         return darkest_nail, darkest_path
 
