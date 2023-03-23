@@ -151,7 +151,6 @@ class StringArtGenerator:
                 darkest_path[rows,cols] = 1.0
                 darkest_nail = index
                 max_darkness = darkness
-
         return darkest_nail, darkest_path
 
     def calculate_paths(self):
