@@ -91,8 +91,8 @@ class StringArtGenerator:
     def load_image(self, path):
         img = Image.open(path)
         self.image = img
-        np_img = np.array(self.image)
-        self.data = np.flipud(np_img).transpose()
+        np_img = np.array(self.image) # This creates an array from the image
+        self.data = np.flipud(np_img).transpose() #Why was this image transposed?
 
     def preprocess(self):
         # Convert image to grayscale
@@ -160,12 +160,6 @@ class StringArtGenerator:
             for node in self.nodes:
                 path = self.bresenham_path(anode, node)
                 self.paths[nail].append(path)
-        # a=[]
-        # self.dimension(a,0,len(self.paths))
-        # row=len(self.paths)
-        # column=len(self.paths[0])
-        # print(f'Rows:{row}, Column:{column}')
-        # print("Shape of a list:",a)
     
     def dimension(self,a,position,val):
         if len(a)>position:

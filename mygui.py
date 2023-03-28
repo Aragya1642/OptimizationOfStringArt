@@ -4,12 +4,13 @@ import tkinter as tk  # This library allows for the development of a GUI
 from stringart import StringArtGenerator  # This is the string art generator from previous students
 import os # Allows for the interaction with the computer os (I think)
 from tkinter import filedialog # For Upload function
-from PIL import ImageTk, Image # For Upload function
+from PIL import ImageTk, Image, ImageOps, ImageFilter, ImageEnhance # For Upload function
 from tkinter import messagebox
 from datetime import datetime
 import csv
 import matplotlib.pyplot as plt
-
+import numpy as np
+import math
 
 image_list = {}
 
@@ -134,6 +135,86 @@ class OptimizationGUI:
         self.imageLabel.image = image_list.get('upload_img')
         return filepath
     
+    def load_image(self, path):
+        img = Image.open(path)
+        # Resize the image
+        orig_width, orig_height = img.size
+        scale_factor = max(orig_height, orig_width) / 200
+        resized_img = img.resize((int(orig_width/scale_factor), int(orig_height/scale_factor)))
+        white_img = Image.new('RGB', (200, 200), (255, 255, 255))
+        resized_width, resized_height = resized_img.size
+        paste_x = int((200 - resized_width) / 2)
+        paste_y = int((200 - resized_height) / 2)
+        white_img.paste(resized_img, (paste_x, paste_y))
+        
+        # Make the image grayscale
+        gray_img = white_img.convert('L')
+
+        # Set my gray image
+        self.image = gray_img
+
+        # Invert the colors and enhance the image
+        self.image = ImageOps.invert(self.image)
+        self.image = self.image.filter(ImageFilter.EDGE_ENHANCE_MORE)
+        self.image = ImageEnhance.Contrast(self.image).enhance(1)
+        self.data = np.array(self.image)  # *IMPORTANT* I have gotten rid of the transformation that the person before me did. This may affect results in the future
+
+    def set_nails(self, nails):
+        self.nails = nails
+
+    def set_nodes_circle(self):
+        spacing = (2*math.pi)/self.nails
+
+        steps = range(self.nails)
+
+        radius = self.get_radius()
+
+        x = [radius + radius*math.cos(t*spacing) for t in steps]
+        y = [radius + radius*math.sin(t*spacing) for t in steps]
+
+        self.nodes = list(zip(x, y))
+
+    def set_nodes_rectangle(self):
+        perimeter = self.get_perimeter()
+        spacing = perimeter/self.nails
+        width, height = np.shape(self.data)
+
+        pnails = [ t*spacing for t in range(self.nails) ]
+
+        xarr = []; yarr = []
+        for p in pnails:
+            if (p < width): # top edge
+              x = p; y = 0;
+            elif (p < width + height): # right edge
+              x = width; y = p - width;
+            elif (p < 2*width + height): # bottom edge}
+              x = width - (p - width - height); # this can obviously be simplified.
+              y = height;
+            else: # left edge
+              x = 0; y = height - (p - 2*width - height);
+            xarr.append(x)
+            yarr.append(y)
+
+        self.nodes = list(zip(xarr, yarr))
+
+    def get_radius(self): # This is used for setting the nodes in a circle
+        return 0.5*np.amax(np.shape(self.data))
+
+    def get_perimeter(self): # This is used for setting the nodes in a rectangle
+        return 2.0*np.sum(np.shape(self.data))
+
+    def set_lines(self, lines):
+        self.lines = lines
+    
+    def set_weight(self,weight):
+        self.weight = weight
+
+    def set_seed(self, seed):
+        self.seed = seed
+
+    def set_pattern(self): # This is equivalent to the generate function in the stringart code
+        pass
+
     def Generate(self):
 
         if self.entry1.get() == '' or self.entry2.get() == '' or self.entry3.get() == '' or self.entry4.get() == '' or self.entry5.get() == '' or self.path_label.cget("text") == '':
@@ -143,7 +224,7 @@ class OptimizationGUI:
         # Set my shape
         if self.check1_state.get() == 1:
             self.shape = 'circle'
-        elif self.check2_state.get() == 2:
+        elif self.check2_state.get() == 1:
             self.shape = 'rectangle'
 
         # Using loops to generate 9 instances of an image
@@ -164,100 +245,107 @@ class OptimizationGUI:
             while b < 3:
                 my_iteration_l = int(self.entry4.get()) + ((b)*line_increment) # This calculates the number of lines for the specific iteration
 
+                # Print what iteration
+                print("New Iteration")
+                print("Pins are:", my_iteration_p)
+                print("Lines are:", my_iteration_l)
+                # Starting to rewrite my code
+                self.load_image(self.path_label.cget("text")) # This does my preprocessing too
+                self.set_nails(int(my_iteration_p))
+                self.set_lines(int(my_iteration_l))
+                self.set_weight(int(self.entry3.get()))
+                self.set_seed(42) # I need to understand where she got this value of 42 from
+                if self.shape == 'circle':
+                    self.set_nodes_circle()
+                elif self.shape == 'rectangle':
+                    self.set_nodes_rectangle()
+                self.pattern = self.set_pattern()
+
+
                 # This is the meat of generation code programmed by previous students
-                self.generator = StringArtGenerator()
-                self.generator.load_image(self.path_label.cget("text"))
-                self.generator.preprocess()
-                self.generator.set_nails(int(my_iteration_p))
-                self.generator.set_seed(42)
-                self.generator.set_iterations(int(my_iteration_l))
-                self.generator.set_shape(self.shape)
-                self.generator.set_weight(int(self.entry3.get()))
-                self.pattern = self.generator.generate()
+                # lines_x = []
+                # lines_y = [] 
+                # axis_list = []
+                # for i, j in zip(self.pattern, self.pattern[1:]): 
+                #     lines_x.append((i[0], j[0]))
+                #     lines_y.append((i[1], j[1]))
+                #     axis_list.append((i[0], i[1])) 
 
-                lines_x = []
-                lines_y = [] 
-                axis_list = []
-                for i, j in zip(self.pattern, self.pattern[1:]): 
-                    lines_x.append((i[0], j[0]))
-                    lines_y.append((i[1], j[1]))
-                    axis_list.append((i[0], i[1])) 
-
-                axis_w_index = []
-                res = []
-                point_ref = []
-                [res.append(x) for x in axis_list if x not in res]
-                axis_w_index.append((0,0.000,0.000,0.000))
-                for i in axis_list:
-                    axis_w_index.append((res.index(i)+1,i[0],i[1],0.000))
-                point_ref.append((0,0.000,0.000,0.000))
-                for i in res:
-                    point_ref.append((res.index(i)+1,i[0],i[1],0.000))
+                # axis_w_index = []
+                # res = []
+                # point_ref = []
+                # [res.append(x) for x in axis_list if x not in res]
+                # axis_w_index.append((0,0.000,0.000,0.000))
+                # for i in axis_list:
+                #     axis_w_index.append((res.index(i)+1,i[0],i[1],0.000))
+                # point_ref.append((0,0.000,0.000,0.000))
+                # for i in res:
+                #     point_ref.append((res.index(i)+1,i[0],i[1],0.000))
                 
-                order = []
-                for i in axis_w_index:
-                    order.append((i[0],0.000))
+                # order = []
+                # for i in axis_w_index:
+                #     order.append((i[0],0.000))
 
-                print(order[0:10])
-                print(axis_w_index[0:10])
+                # print(order[0:10])
+                # print(axis_w_index[0:10])
 
-                current_dateTime = datetime.now()
-                d1 = current_dateTime.strftime("%Y%m%d%H%M%S")
+                # current_dateTime = datetime.now()
+                # d1 = current_dateTime.strftime("%Y%m%d%H%M%S")
 
-                axis_index_name = os.path.join(os.getcwd(),'StringArt_doc', "axis_w_index_" + d1 + ".txt")
-                print(axis_index_name)
-                os.makedirs(os.path.dirname(axis_index_name), exist_ok=True)
-                f4 = open(axis_index_name, "w+")
-                with f4:   
-                    write = csv.writer(f4)
-                    write.writerows(axis_w_index)
-                f4.close()
+                # axis_index_name = os.path.join(os.getcwd(),'StringArt_doc', "axis_w_index_" + d1 + ".txt")
+                # print(axis_index_name)
+                # os.makedirs(os.path.dirname(axis_index_name), exist_ok=True)
+                # f4 = open(axis_index_name, "w+")
+                # with f4:   
+                #     write = csv.writer(f4)
+                #     write.writerows(axis_w_index)
+                # f4.close()
 
-                point_ref_name = os.path.join(os.getcwd(), 'StringArt_doc', "point_reference_" + d1 + ".txt")
-                os.makedirs(os.path.dirname(point_ref_name), exist_ok=True)
-                f = open(point_ref_name, 'w+')
-                for t in point_ref:
-                    line = ' '.join(str(x).strip('(').strip(',').strip(')') for x in t)
-                    f.write(line + '\n')
-                f.close()
+                # point_ref_name = os.path.join(os.getcwd(), 'StringArt_doc', "point_reference_" + d1 + ".txt")
+                # os.makedirs(os.path.dirname(point_ref_name), exist_ok=True)
+                # f = open(point_ref_name, 'w+')
+                # for t in point_ref:
+                #     line = ' '.join(str(x).strip('(').strip(',').strip(')') for x in t)
+                #     f.write(line + '\n')
+                # f.close()
 
-                order_name = os.path.join(os.getcwd(), 'StringArt_doc', "order_" + d1 + ".txt")
-                os.makedirs(os.path.dirname(order_name), exist_ok=True)
-                f5 = open(order_name, 'w+')
-                for t in order[1:]:
-                    line = ' '.join(str(order).strip('(').strip(')') for order in t)
-                    f5.write(line+'\n')
-                f5.close()
+                # order_name = os.path.join(os.getcwd(), 'StringArt_doc', "order_" + d1 + ".txt")
+                # os.makedirs(os.path.dirname(order_name), exist_ok=True)
+                # f5 = open(order_name, 'w+')
+                # for t in order[1:]:
+                #     line = ' '.join(str(order).strip('(').strip(')') for order in t)
+                #     f5.write(line+'\n')
+                # f5.close()
 
-                xmin = 0.
-                ymin = 0.
-                xmax = self.generator.data.shape[0]
-                ymax = self.generator.data.shape[1]
+                # xmin = 0.
+                # ymin = 0.
+                # xmax = self.generator.data.shape[0]
+                # ymax = self.generator.data.shape[1]
 
-                plt.ion()
-                plt.figure(figsize=(8, 8))
-                plt.axis('off')
-                axes = plt.gca()
-                axes.set_xlim([xmin, xmax])
-                axes.set_ylim([ymin, ymax])
-                axes.get_xaxis().set_visible(False)
-                axes.get_yaxis().set_visible(False)
-                axes.set_aspect('equal')
-                plt.draw()
+                # plt.ion()
+                # plt.figure(figsize=(8, 8))
+                # plt.axis('off')
+                # axes = plt.gca()
+                # axes.set_xlim([xmin, xmax])
+                # axes.set_ylim([ymin, ymax])
+                # axes.get_xaxis().set_visible(False)
+                # axes.get_yaxis().set_visible(False)
+                # axes.set_aspect('equal')
+                # plt.draw()
 
-                batchsize = 10
-                for i in range(0, len(lines_x), batchsize):
-                    plt.plot(lines_x[i:i+batchsize], lines_y[i:i+batchsize],
-                            linewidth=0.1, color='k')
-                    plt.draw()
-                    plt.pause(0.000001)
+                # batchsize = 10
+                # for i in range(0, len(lines_x), batchsize):
+                #     plt.plot(lines_x[i:i+batchsize], lines_y[i:i+batchsize],
+                #             linewidth=0.1, color='k')
+                #     plt.draw()
+                #     plt.pause(0.000001)
 
-                save_fig_path = os.path.join(os.getcwd(), 'StringArt_doc', "result_" + d1 + ".png")
-                os.makedirs(os.path.dirname(save_fig_path), exist_ok=True)
-                plt.savefig(save_fig_path, bbox_inches='tight', pad_inches=0)
+                # save_fig_path = os.path.join(os.getcwd(), 'StringArt_doc', "result_" + d1 + ".png")
+                # os.makedirs(os.path.dirname(save_fig_path), exist_ok=True)
+                # plt.savefig(save_fig_path, bbox_inches='tight', pad_inches=0)
 
-                result_img = Image.open(save_fig_path)
-                resize_result_image = result_img.resize((200, 200))
+                # result_img = Image.open(save_fig_path)
+                # resize_result_image = result_img.resize((200, 200))
 
                 b += 1
             
