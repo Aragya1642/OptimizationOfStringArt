@@ -173,7 +173,7 @@ class OptimizationGUI:
         x = [radius + radius*math.cos(t*spacing) for t in steps]
         y = [radius + radius*math.sin(t*spacing) for t in steps]
 
-        self.nodes = list(zip(x, y)) # I am getting good readings from this :)
+        self.nodes = list(zip(x, y)) # I am getting good readings from this
 
     def set_nodes_rectangle(self):
         perimeter = self.get_perimeter()
@@ -253,16 +253,6 @@ class OptimizationGUI:
         return pattern
 
     def calculate_paths(self): # This makes one big list of all the paths possible from each nail.
-        # for nail, anode in enumerate(self.nodes): # The anode is where the nail at which the line starts and the node is to which the line goes to
-        #     self.paths.append([]) # This creates a empty list every single time our anode changes which seperates the data visually.
-        #     for node in self.nodes:
-        #         if node == anode: # This avoids a second empty set when the nail and anode are the same.
-        #             pass
-        #         else:
-        #             path = self.bresenham_path(anode, node)
-        #             self.paths[nail]
-        #             self.paths.append(path)
-
         for nail, anode in enumerate(self.nodes): # Old code
             self.paths.append([])
             for node in self.nodes:
@@ -323,27 +313,7 @@ class OptimizationGUI:
 
         return path
     
-    def choose_darkest_path(self, nail): # My own rewritten code
-        # max_darkness = -1.0
-        # a = 0
-        # for i in range(len(self.paths)):
-        #     x_values = []
-        #     y_values = []
-        #     if i % self.nails == 0:
-        #         a = a + 1
-        #     else:
-        #         for j in range(len(self.paths[i])):
-        #             x_values.append(self.paths[i][j][0])
-        #             y_values.append(self.paths[i][j][1])
-        #             darkness = float(np.sum(self.data[x_values, y_values]))
-                    
-        #             if darkness > max_darkness:
-        #                 darkest_path = np.zeros(np.shape(self.data))
-        #                 darkest_path[x_values,y_values] = 1.0
-        #                 darkest_nail = a
-        #                 max_darkness = darkness
-        # return darkest_nail, darkest_path
-
+    def choose_darkest_path(self, nail):
         max_darkness = -1.0
         for count, rowcol in enumerate(self.paths[nail]):
             rows = [i[0] for i in rowcol]
