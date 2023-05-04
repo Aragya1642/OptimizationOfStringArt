@@ -15,8 +15,8 @@ from PIL import Image, ImageOps, ImageFilter, ImageEnhance
 
 class StringArtGenerator:
     def __init__(self):
-        self.iterations = 1000           # So is everything in this class and basically just a set up for the GUI which actually creates the image?
-        self.shape = 'circle'            # Why are these values hard-coded?
+        self.iterations = 1000
+        self.shape = 'circle'
         self.image = None
         self.data = None
         self.residual = None
@@ -91,8 +91,8 @@ class StringArtGenerator:
     def load_image(self, path):
         img = Image.open(path)
         self.image = img
-        np_img = np.array(self.image) # This creates an array from the image
-        self.data = np.flipud(np_img).transpose() #Why was this image transposed?
+        np_img = np.array(self.image)
+        self.data = np.flipud(np_img).transpose()
 
     def preprocess(self):
         # Convert image to grayscale
@@ -141,7 +141,7 @@ class StringArtGenerator:
 
     def choose_darkest_path(self, nail):
         max_darkness = -1.0
-        for count, rowcol in enumerate(self.paths[nail]):
+        for index, rowcol in enumerate(self.paths[nail]):
             rows = [i[0] for i in rowcol]
             cols = [i[1] for i in rowcol]
             darkness = float(np.sum(self.data[rows, cols]))
@@ -149,8 +149,9 @@ class StringArtGenerator:
             if darkness > max_darkness:
                 darkest_path = np.zeros(np.shape(self.data))
                 darkest_path[rows,cols] = 1.0
-                darkest_nail = count
+                darkest_nail = index
                 max_darkness = darkness
+
         return darkest_nail, darkest_path
 
     def calculate_paths(self):
@@ -159,6 +160,12 @@ class StringArtGenerator:
             for node in self.nodes:
                 path = self.bresenham_path(anode, node)
                 self.paths[nail].append(path)
+        # a=[]
+        # self.dimension(a,0,len(self.paths))
+        # row=len(self.paths)
+        # column=len(self.paths[0])
+        # print(f'Rows:{row}, Column:{column}')
+        # print("Shape of a list:",a)
     
     def dimension(self,a,position,val):
         if len(a)>position:

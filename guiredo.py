@@ -9,7 +9,8 @@ from PIL import ImageTk, Image
 import matplotlib.pyplot as plt
 from tkinter import messagebox
 
-from stringart import StringArtGenerator
+from stringart1 import StringArtGenerator
+
 
 import csv
 import matplotlib.pyplot as plt
@@ -61,7 +62,7 @@ def Generate():
     generator.load_image(path_label.cget("text"))
     generator.preprocess()
     generator.set_nails(int(nails_entry.get())) 
-    generator.set_seed(1)
+    generator.set_seed(42)
     generator.set_iterations(int(iteration_entry.get()))
     generator.set_shape(combobox_shpae.get())
     generator.set_weight(int(weight_entry.get()))
@@ -166,7 +167,7 @@ def Generate():
     result_imageLabel.configure(image = image_list.get('result_img'))
     imageLabel.image = image_list.get('result_img')
 
-#####################################################################################################
+
 
 
 window = tk.Tk()

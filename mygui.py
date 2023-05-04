@@ -8,9 +8,10 @@ from PIL import ImageTk, Image, ImageOps, ImageFilter, ImageEnhance # For Upload
 from tkinter import messagebox
 from datetime import datetime
 import csv
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt # This allows us to graph
 import numpy as np
 import math
+import copy
 
 image_list = {}
 
@@ -89,13 +90,13 @@ class OptimizationGUI:
         self.path_label.pack()
         img_path_value = self.path_label.cget("text")
         ########################################## - Showing the uploaded image
-        self.imageLabel = tk.Label(self.root)
-        self.imageLabel.pack(padx=10,pady=10)
+        self.imageLabel1 = tk.Label(self.root)
+        self.imageLabel1.pack(padx=10,pady=10)
         ########################################## - Start generating the stringart
         self.generate_btn = Button(self.root, text = "Optimize my Picture", font= ('Arial', 30), command=self.Generate)
         self.generate_btn.pack(side=tk.TOP)
-        # Make sure to add a command to the optimize button
-        ##########################################
+        ########################################## - Display my Images
+
         self.root.mainloop()
 
 # If I want to add more buttons, I need to define their functions here.
@@ -131,8 +132,8 @@ class OptimizationGUI:
         image_list['upload_img'] = upload_img_tk
 
         # Create a Label Widget to display the text or Image
-        self.imageLabel.configure(image = image_list.get('upload_img'))
-        self.imageLabel.image = image_list.get('upload_img')
+        self.imageLabel1.configure(image = image_list.get('upload_img'))
+        self.imageLabel1.image = image_list.get('upload_img')
         return filepath
     
     def load_image(self, path):
@@ -172,7 +173,7 @@ class OptimizationGUI:
         x = [radius + radius*math.cos(t*spacing) for t in steps]
         y = [radius + radius*math.sin(t*spacing) for t in steps]
 
-        self.nodes = list(zip(x, y))
+        self.nodes = list(zip(x, y)) # I am getting good readings from this :)
 
     def set_nodes_rectangle(self):
         perimeter = self.get_perimeter()
@@ -195,7 +196,7 @@ class OptimizationGUI:
             xarr.append(x)
             yarr.append(y)
 
-        self.nodes = list(zip(xarr, yarr))
+        self.nodes = list(zip(xarr, yarr)) # I am getting good readings from this :)
 
     def get_radius(self): # This is used for setting the nodes in a circle
         return 0.5*np.amax(np.shape(self.data))
@@ -212,8 +213,149 @@ class OptimizationGUI:
     def set_seed(self, seed):
         self.seed = seed
 
-    def set_pattern(self): # This is equivalent to the generate function in the stringart code
-        pass
+    def set_pattern(self): # This is equivalent to the generate function in the stringart code      
+        self.nail = self.seed
+        self.calculate_paths()
+        
+        delta = 0.0 # Not exactly sure what this does but probably has some purpose
+        pattern = []
+        datacopy = copy.deepcopy(self.data)
+        for i in range(self.lines):
+            # We have calculated all the paths from each pin to every other pin and this data is stored
+            # in self.paths
+
+            # Now we need to be able to put these paths on the image and determine which path is the darkest.
+            # This will tell us where to put the line down.
+
+            # choose max darkness path
+            darkest_nail, darkest_path = self.choose_darkest_path(self.nail)
+
+            # add chosen node to pattern
+            pattern.append(self.nodes[darkest_nail])
+
+            # substract chosen path from image
+            self.data = self.data - self.weight*darkest_path
+            self.data[self.data < 0.0] = 0.0
+
+            if (np.sum(self.data) <= 0.0):
+                print("Stopping iterations. No more data or residual unchanged.")
+                break
+
+            # store current residual as delta for next iteration
+            delta = np.sum(self.data)
+
+            # continue from destination node as new start
+            self.nail = darkest_nail
+
+        self.residual = copy.deepcopy(self.data)
+        self.data = datacopy
+
+        return pattern
+
+    def calculate_paths(self): # This makes one big list of all the paths possible from each nail.
+        # for nail, anode in enumerate(self.nodes): # The anode is where the nail at which the line starts and the node is to which the line goes to
+        #     self.paths.append([]) # This creates a empty list every single time our anode changes which seperates the data visually.
+        #     for node in self.nodes:
+        #         if node == anode: # This avoids a second empty set when the nail and anode are the same.
+        #             pass
+        #         else:
+        #             path = self.bresenham_path(anode, node)
+        #             self.paths[nail]
+        #             self.paths.append(path)
+
+        for nail, anode in enumerate(self.nodes): # Old code
+            self.paths.append([])
+            for node in self.nodes:
+                path = self.bresenham_path(anode, node)
+                self.paths[nail].append(path)
+    
+    def bresenham_path(self, start, end): # This uses some Bresenham's Line Algorithm, no clue what this is
+        # Setup initial conditions
+        x1, y1 = start
+        x2, y2 = end
+
+        x1 = max(0, min(round(x1), self.data.shape[0]-1))
+        y1 = max(0, min(round(y1), self.data.shape[1]-1))
+        x2 = max(0, min(round(x2), self.data.shape[0]-1))
+        y2 = max(0, min(round(y2), self.data.shape[1]-1))
+
+        dx = x2 - x1
+        dy = y2 - y1
+
+        # Prepare output array
+        path = []
+
+        if (start == end):
+            return path
+
+        # Determine how steep the line is
+        is_steep = abs(dy) > abs(dx)
+
+        # Rotate line
+        if is_steep:
+            x1, y1 = y1, x1
+            x2, y2 = y2, x2
+
+        # Swap start and end points if necessary and store swap state
+        if x1 > x2:
+            x1, x2 = x2, x1
+            y1, y2 = y2, y1
+
+        # Recalculate differentials
+        dx = x2 - x1
+        dy = y2 - y1
+
+        # Calculate error
+        error = int(dx / 2.0)
+        ystep = 1 if y1 < y2 else -1
+
+        # Iterate over bounding box generating points between start and end
+        y = y1
+        for x in range(x1, x2 + 1):
+            if is_steep:
+                path.append([y, x])
+            else:
+                path.append([x, y])
+            error -= abs(dy)
+            if error < 0:
+                y += ystep
+                error += dx
+
+        return path
+    
+    def choose_darkest_path(self, nail): # My own rewritten code
+        # max_darkness = -1.0
+        # a = 0
+        # for i in range(len(self.paths)):
+        #     x_values = []
+        #     y_values = []
+        #     if i % self.nails == 0:
+        #         a = a + 1
+        #     else:
+        #         for j in range(len(self.paths[i])):
+        #             x_values.append(self.paths[i][j][0])
+        #             y_values.append(self.paths[i][j][1])
+        #             darkness = float(np.sum(self.data[x_values, y_values]))
+                    
+        #             if darkness > max_darkness:
+        #                 darkest_path = np.zeros(np.shape(self.data))
+        #                 darkest_path[x_values,y_values] = 1.0
+        #                 darkest_nail = a
+        #                 max_darkness = darkness
+        # return darkest_nail, darkest_path
+
+        max_darkness = -1.0
+        for count, rowcol in enumerate(self.paths[nail]):
+            rows = [i[0] for i in rowcol]
+            cols = [i[1] for i in rowcol]
+            darkness = float(np.sum(self.data[rows, cols]))
+
+            if darkness > max_darkness:
+                darkest_path = np.zeros(np.shape(self.data))
+                darkest_path[rows,cols] = 1.0
+                darkest_nail = count
+                max_darkness = darkness
+        return darkest_nail, darkest_path
 
     def Generate(self):
 
@@ -230,7 +372,8 @@ class OptimizationGUI:
         # Using loops to generate 9 instances of an image
         a=0 # This will increment the number of pins
         b=0 # This will increment the number of lines
-        
+        c=1 # This will show which iteration we are on
+
         # Take total range of pins and divide by 3 to get the values at which the image needs to be generated
         pin_range = int(self.entry2.get()) - int(self.entry1.get())
         pin_increment = pin_range / 2
@@ -246,106 +389,111 @@ class OptimizationGUI:
                 my_iteration_l = int(self.entry4.get()) + ((b)*line_increment) # This calculates the number of lines for the specific iteration
 
                 # Print what iteration
-                print("New Iteration")
+                print("Iteration", c)
                 print("Pins are:", my_iteration_p)
                 print("Lines are:", my_iteration_l)
+                
+                # Increment iteration number
+                c = c+1
+
                 # Starting to rewrite my code
                 self.load_image(self.path_label.cget("text")) # This does my preprocessing too
                 self.set_nails(int(my_iteration_p))
                 self.set_lines(int(my_iteration_l))
                 self.set_weight(int(self.entry3.get()))
-                self.set_seed(42) # I need to understand where she got this value of 42 from
+                self.set_seed(1) # I need to understand where she got this value of 42 from
                 if self.shape == 'circle':
                     self.set_nodes_circle()
                 elif self.shape == 'rectangle':
                     self.set_nodes_rectangle()
-                self.pattern = self.set_pattern()
-
-
-                # This is the meat of generation code programmed by previous students
-                # lines_x = []
-                # lines_y = [] 
-                # axis_list = []
-                # for i, j in zip(self.pattern, self.pattern[1:]): 
-                #     lines_x.append((i[0], j[0]))
-                #     lines_y.append((i[1], j[1]))
-                #     axis_list.append((i[0], i[1])) 
-
-                # axis_w_index = []
-                # res = []
-                # point_ref = []
-                # [res.append(x) for x in axis_list if x not in res]
-                # axis_w_index.append((0,0.000,0.000,0.000))
-                # for i in axis_list:
-                #     axis_w_index.append((res.index(i)+1,i[0],i[1],0.000))
-                # point_ref.append((0,0.000,0.000,0.000))
-                # for i in res:
-                #     point_ref.append((res.index(i)+1,i[0],i[1],0.000))
+                self.paths = []
+                self.pattern = self.set_pattern() # This returns the order of the nodes that will be graphed
                 
-                # order = []
-                # for i in axis_w_index:
-                #     order.append((i[0],0.000))
+                # This is the meat of generation code programmed by previous students
+                
+                lines_x = []
+                lines_y = [] 
+                axis_list = []
+                for i, j in zip(self.pattern, self.pattern[1:]): 
+                    lines_x.append((i[0], j[0]))
+                    lines_y.append((i[1], j[1]))
+                    axis_list.append((i[0], i[1])) 
+
+                axis_w_index = []
+                res = []
+                point_ref = []
+                [res.append(x) for x in axis_list if x not in res]
+                axis_w_index.append((0,0.000,0.000,0.000))
+                for i in axis_list:
+                    axis_w_index.append((res.index(i)+1,i[0],i[1],0.000))
+                point_ref.append((0,0.000,0.000,0.000))
+                for i in res:
+                    point_ref.append((res.index(i)+1,i[0],i[1],0.000))
+                
+                order = []
+                for i in axis_w_index:
+                    order.append((i[0],0.000))
 
                 # print(order[0:10])
                 # print(axis_w_index[0:10])
 
-                # current_dateTime = datetime.now()
-                # d1 = current_dateTime.strftime("%Y%m%d%H%M%S")
+                current_dateTime = datetime.now()
+                d1 = current_dateTime.strftime("%Y%m%d%H%M%S")
 
-                # axis_index_name = os.path.join(os.getcwd(),'StringArt_doc', "axis_w_index_" + d1 + ".txt")
+                axis_index_name = os.path.join(os.getcwd(),'StringArt_doc', "axis_w_index_" + d1 + ".txt")
                 # print(axis_index_name)
-                # os.makedirs(os.path.dirname(axis_index_name), exist_ok=True)
-                # f4 = open(axis_index_name, "w+")
-                # with f4:   
-                #     write = csv.writer(f4)
-                #     write.writerows(axis_w_index)
-                # f4.close()
+                os.makedirs(os.path.dirname(axis_index_name), exist_ok=True)
+                f4 = open(axis_index_name, "w+")
+                with f4:   
+                    write = csv.writer(f4)
+                    write.writerows(axis_w_index)
+                f4.close()
 
-                # point_ref_name = os.path.join(os.getcwd(), 'StringArt_doc', "point_reference_" + d1 + ".txt")
-                # os.makedirs(os.path.dirname(point_ref_name), exist_ok=True)
-                # f = open(point_ref_name, 'w+')
-                # for t in point_ref:
-                #     line = ' '.join(str(x).strip('(').strip(',').strip(')') for x in t)
-                #     f.write(line + '\n')
-                # f.close()
+                point_ref_name = os.path.join(os.getcwd(), 'StringArt_doc', "point_reference_" + d1 + ".txt")
+                os.makedirs(os.path.dirname(point_ref_name), exist_ok=True)
+                f = open(point_ref_name, 'w+')
+                for t in point_ref:
+                    line = ' '.join(str(x).strip('(').strip(',').strip(')') for x in t)
+                    f.write(line + '\n')
+                f.close()
 
-                # order_name = os.path.join(os.getcwd(), 'StringArt_doc', "order_" + d1 + ".txt")
-                # os.makedirs(os.path.dirname(order_name), exist_ok=True)
-                # f5 = open(order_name, 'w+')
-                # for t in order[1:]:
-                #     line = ' '.join(str(order).strip('(').strip(')') for order in t)
-                #     f5.write(line+'\n')
-                # f5.close()
+                order_name = os.path.join(os.getcwd(), 'StringArt_doc', "order_" + d1 + ".txt")
+                os.makedirs(os.path.dirname(order_name), exist_ok=True)
+                f5 = open(order_name, 'w+')
+                for t in order[1:]:
+                    line = ' '.join(str(order).strip('(').strip(')') for order in t)
+                    f5.write(line+'\n')
+                f5.close()
 
-                # xmin = 0.
-                # ymin = 0.
-                # xmax = self.generator.data.shape[0]
-                # ymax = self.generator.data.shape[1]
+                xmin = 0.
+                ymin = 0.
+                xmax = self.data.shape[0]
+                ymax = self.data.shape[1]
 
-                # plt.ion()
-                # plt.figure(figsize=(8, 8))
-                # plt.axis('off')
-                # axes = plt.gca()
-                # axes.set_xlim([xmin, xmax])
-                # axes.set_ylim([ymin, ymax])
-                # axes.get_xaxis().set_visible(False)
-                # axes.get_yaxis().set_visible(False)
-                # axes.set_aspect('equal')
-                # plt.draw()
+                plt.ion()
+                plt.figure(figsize=(8, 8))
+                plt.axis('off')
+                axes = plt.gca()
+                axes.set_xlim([xmin, xmax])
+                axes.set_ylim([ymin, ymax])
+                axes.get_xaxis().set_visible(False)
+                axes.get_yaxis().set_visible(False)
+                axes.set_aspect('equal')
+                plt.draw()
 
-                # batchsize = 10
-                # for i in range(0, len(lines_x), batchsize):
-                #     plt.plot(lines_x[i:i+batchsize], lines_y[i:i+batchsize],
-                #             linewidth=0.1, color='k')
-                #     plt.draw()
-                #     plt.pause(0.000001)
+                batchsize = 10
+                for i in range(0, len(lines_x), batchsize):
+                    plt.plot(lines_x[i:i+batchsize], lines_y[i:i+batchsize],
+                            linewidth=0.1, color='k')
+                    plt.draw()
+                    plt.pause(0.000001)
 
-                # save_fig_path = os.path.join(os.getcwd(), 'StringArt_doc', "result_" + d1 + ".png")
-                # os.makedirs(os.path.dirname(save_fig_path), exist_ok=True)
-                # plt.savefig(save_fig_path, bbox_inches='tight', pad_inches=0)
+                save_fig_path = os.path.join(os.getcwd(), 'StringArt_doc', "result_" + d1 + ".png")
+                os.makedirs(os.path.dirname(save_fig_path), exist_ok=True)
+                plt.savefig(save_fig_path, bbox_inches='tight', pad_inches=0)
 
-                # result_img = Image.open(save_fig_path)
-                # resize_result_image = result_img.resize((200, 200))
+                result_img = Image.open(save_fig_path)
+                resize_result_image = result_img.resize((200, 200))
 
                 b += 1
             
