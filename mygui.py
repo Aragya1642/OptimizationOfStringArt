@@ -188,7 +188,7 @@ class OptimizationGUI:
               x = p; y = 0;
             elif (p < width + height): # right edge
               x = width; y = p - width;
-            elif (p < 2*width + height): # bottom edge}
+            elif (p < 2*width + height): # bottom edge
               x = width - (p - width - height); # this can obviously be simplified.
               y = height;
             else: # left edge
