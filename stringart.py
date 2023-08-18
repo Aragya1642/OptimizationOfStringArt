@@ -1,5 +1,5 @@
 #!/bin/python
-
+# Just to save
 # -*- coding: utf-8 -*-
 """stringart.py - A program to calculate and visualize string art
 
