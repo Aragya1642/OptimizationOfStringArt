@@ -1,6 +1,6 @@
 # Optimization Of String Art Tool
  
-This repository contains code for one of my first projects in Python. The main code that needs to run is mygui.py and is dependent on the stringart.py file. When the gui opens, select the options given as well as a range for pins and lines. When selecting the number of pins and lines, it is a good idea to select a number above 100 for the minimum of pins and above 800 for minimmum of lines. This should give a decent outpit image.
+This repository contains code for one of my first projects in Python. The main code that needs to run is mygui.py and is dependent on the stringart.py file. When the gui opens, select the options given as well as a range for pins and lines. When selecting the number of pins and lines, it is a good idea to select a number above 100 for the minimum of pins and above 800 for minimmum of lines. This should give a decent output image.
 
 **Variables needed to be entered**
 * **Shape of canvas:** 'Circle' or 'Rectangle' 
@@ -11,7 +11,7 @@ This repository contains code for one of my first projects in Python. The main c
 
 ![alt text](https://github.com/Aragya1642/OptimizationOfStringArt/blob/main/gui.png)
 
-**There will be 3 outputs for each of the nine photos after each optimization**
+**There will be 3 outputs for each of the 9 photos after each optimization**
 1. **result image**
 2. **point_reference**
 3. **order**
