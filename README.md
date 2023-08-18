@@ -9,4 +9,4 @@ This repository contains code for one of my first projects in Python. The main c
 * **Range of Lines:** Number of strings on the canvas
 * **Image:** The image you want to optimize in string art
 
-![alt text](https://github.com/flyselena15/StringArtGeneratorWithGUI/blob/main/demo/GUI.png)
+![alt text]()
