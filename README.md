@@ -10,3 +10,10 @@ This repository contains code for one of my first projects in Python. The main c
 * **Image:** The image you want to optimize in string art
 
 ![alt text](https://github.com/Aragya1642/OptimizationOfStringArt/blob/main/gui.png)
+
+**There will be 3 outputs for each of the nine photos after each optimization**
+1. **result image**
+2. **point_reference**
+3. **order**
+
+All ouputs will be stored unfer the file **'StringArt_doc'**
